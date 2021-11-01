@@ -1,0 +1,146 @@
+package pt.uc.dei.paj.dto;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+
+public class ActivityDTO extends AbstractDTO implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private long id;
+
+	@Size(max = 100)
+	@NotEmpty
+	private String name;
+
+	@Size(max = 300)
+	private String description;
+	
+	@NotEmpty
+	private String type;
+
+	@NotEmpty
+	private String state;
+
+	@NotNull
+	private long resourceId;
+
+	@NotNull
+	private Instant startDate;
+
+	@NotNull
+	private Instant endDate;
+
+	@NotNull
+	private int hoursSpend;
+
+	@NotNull
+	private int hoursLeft;
+
+	@NotNull
+	private BigDecimal executionPercentage;
+	
+	private ArrayList<ActivityDTO> precedents;
+
+	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public long getResourceId() {
+		return resourceId;
+	}
+
+	public void setResourceId(long resourceId) {
+		this.resourceId = resourceId;
+	}
+
+	public Instant getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(Instant startDate) {
+		this.startDate = startDate;
+	}
+
+	public Instant getEndDate() {
+		return endDate;
+	}
+
+	public void setEndDate(Instant endDate) {
+		this.endDate = endDate;
+	}
+
+	public int getHoursSpend() {
+		return hoursSpend;
+	}
+
+	public void setHoursSpend(int hoursSpend) {
+		this.hoursSpend = hoursSpend;
+	}
+
+	public int getHoursLeft() {
+		return hoursLeft;
+	}
+
+	public void setHoursLeft(int hoursLeft) {
+		this.hoursLeft = hoursLeft;
+	}
+
+	public BigDecimal getExecutionPercentage() {
+		return executionPercentage;
+	}
+
+	public void setExecutionPercentage(BigDecimal executionPercentage) {
+		this.executionPercentage = executionPercentage;
+	}
+
+	public ArrayList<ActivityDTO> getPrecedents() {
+		return precedents;
+	}
+
+	public void setPrecedents(ArrayList<ActivityDTO> precedents) {
+		this.precedents = precedents;
+	}
+}

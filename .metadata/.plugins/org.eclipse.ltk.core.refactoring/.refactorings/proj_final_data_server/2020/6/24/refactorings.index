@@ -1,0 +1,11 @@
+1591884905917	Encapsulate field 'technicalManager'
+1591884910871	Encapsulate field 'technicalManagerId'
+1591884914455	Encapsulate field 'technicalManagerEmail'
+1591955073670	Delete element
+1591972824934	Delete element
+1591976337970	Encapsulate field 'precedents'
+1592000191785	Encapsulate field 'allocationDTO'
+1592000738295	Encapsulate field 'allocationId'
+1592002822913	Encapsulate field 'precedentsId'
+1592002835113	Encapsulate field 'precedents'
+1592131617528	Encapsulate field 'resource'

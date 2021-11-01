@@ -1,0 +1,13 @@
+.indexGrid {
+  height: 90vh;
+  padding: 1em;
+}
+
+body {
+  background: #eee;
+}
+.recaptcha {
+  text-align: center;
+  display: inline-block;
+  padding: 10px 0px 10px 0px;
+}

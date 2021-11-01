@@ -1,0 +1,60 @@
+package pt.uc.dei.paj.ws;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import pt.uc.dei.paj.dto.ActivityDTO;
+import pt.uc.dei.paj.dto.AllocationDTO;
+import pt.uc.dei.paj.dto.NotificationDTO;
+import pt.uc.dei.paj.dto.ProjectDTO;
+import pt.uc.dei.paj.entity.Activity;
+import pt.uc.dei.paj.entity.User;
+import pt.uc.dei.paj.enums.NotificationType;
+
+@ApplicationScoped
+public class NotificationBean {
+
+	public void createNotificationAddResourceToProject(ProjectDTO projectDTO) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), projectDTO,
+					NotificationType.NEW_PROJECT);
+			NotificationEndpoint.sendMessage(notificationDTO);
+		}
+	}
+
+	public void createNotificationChangeActivity(Activity activity) {
+		NotificationDTO notificationDTO = new NotificationDTO(activity.getAllocation().getUser().getId(),
+				activity.toDTO(), NotificationType.ACTIVITY_CHANGED);
+		NotificationEndpoint.sendMessage(notificationDTO);
+	}
+
+	public void createNotificationUserChanged(User user) {
+		NotificationDTO notificationDTO = new NotificationDTO(user.getId(), NotificationType.USER_CHANGED);
+		NotificationEndpoint.sendMessage(notificationDTO);
+	}
+
+	public void createNotificationChangeProject(ProjectDTO projectDTO) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), projectDTO,
+					NotificationType.PROJECT_CHANGED);
+			NotificationEndpoint.sendMessage(notificationDTO);
+		}
+	}
+
+	public void createNotificationNewActivity(ActivityDTO activityDTO, ProjectDTO projectDTO) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), activityDTO,
+					NotificationType.NEW_ACTIVITY);
+			NotificationEndpoint.sendMessage(notificationDTO);
+		}
+	}
+
+	public void createNotificationAddResourceToActivity() {
+		NotificationDTO notificationDTO = new NotificationDTO();
+
+	}
+
+	public void createNotificationProjectState() {
+		NotificationDTO notificationDTO = new NotificationDTO();
+	}
+
+}

@@ -1,0 +1,100 @@
+package pt.uc.dei.paj.ws;
+
+import java.util.ArrayList;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import pt.uc.dei.paj.dao.AllocationDAO;
+import pt.uc.dei.paj.dao.ProjectDAO;
+import pt.uc.dei.paj.dto.ActivityDTO;
+import pt.uc.dei.paj.dto.AllocationDTO;
+import pt.uc.dei.paj.dto.NotificationDTO;
+import pt.uc.dei.paj.dto.ProjectDTO;
+import pt.uc.dei.paj.entity.Activity;
+import pt.uc.dei.paj.entity.Allocation;
+import pt.uc.dei.paj.entity.Project;
+import pt.uc.dei.paj.entity.User;
+import pt.uc.dei.paj.enums.NotificationType;
+import pt.uc.dei.paj.util.EntityMapper;
+
+@ApplicationScoped
+public class NotificationBean {
+
+	@Inject
+	AllocationDAO allocationDAO;
+
+	@Inject
+	ProjectDAO projectDAO;
+
+	public void createNotificationNewProject(ProjectDTO projectDTO, User user) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			if (user.getId() != allcDTO.getUser().getId()) {
+				NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), projectDTO,
+						NotificationType.NEW_PROJECT);
+				NotificationEndpoint.sendMessage(notificationDTO);
+			}
+		}
+	}
+
+	public void createNotificationNewActivity(ActivityDTO activityDTO, ProjectDTO projectDTO, User user) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			if (user.getId() != allcDTO.getUser().getId()) {
+				NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), activityDTO,
+						projectDTO, NotificationType.NEW_ACTIVITY);
+				NotificationEndpoint.sendMessage(notificationDTO);
+			}
+		}
+	}
+
+	public void createNotificationAddResourceToProject(ArrayList<AllocationDTO> allcAddedList, User user,
+			long projectId) {
+		ArrayList<Allocation> allcList = allocationDAO.findProjectResources(projectId);
+		ArrayList<AllocationDTO> allcDTOList = EntityMapper.toAllocationDTOList(allcList);
+
+		for (AllocationDTO allcDTO : allcDTOList) {
+			if (user.getId() != allcDTO.getUser().getId()) {
+				NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), allcAddedList,
+						NotificationType.NEW_RESOURCE, projectDAO.findById(projectId).toDTO());
+				NotificationEndpoint.sendMessage(notificationDTO);
+			}
+		}
+	}
+
+	public void createNotificationChangeActivity(ActivityDTO actvDTO, User user) {
+		ArrayList<Allocation> allcList = allocationDAO.findProjectResources(actvDTO.getProjectId());
+		ArrayList<AllocationDTO> allcDTOList = EntityMapper.toAllocationDTOList(allcList);
+		for (AllocationDTO allcDTO : allcDTOList) {
+			if (user.getId() != allcDTO.getUser().getId()) {
+				NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), actvDTO,
+						projectDAO.findById(actvDTO.getProjectId()).toDTO(), NotificationType.ACTIVITY_CHANGED);
+				NotificationEndpoint.sendMessage(notificationDTO);
+			}
+		}
+	}
+
+	public void createNotificationUserChanged(User user) {
+		NotificationDTO notificationDTO = new NotificationDTO(user.getId(), NotificationType.USER_CHANGED);
+		NotificationEndpoint.sendMessage(notificationDTO);
+	}
+
+	public void createNotificationChangeProject(ProjectDTO projectDTO, User user) {
+		for (AllocationDTO allcDTO : projectDTO.getAllocations()) {
+			if (user.getId() != allcDTO.getUser().getId()) {
+				NotificationDTO notificationDTO = new NotificationDTO(allcDTO.getUser().getId(), projectDTO,
+						NotificationType.PROJECT_CHANGED);
+				NotificationEndpoint.sendMessage(notificationDTO);
+			}
+		}
+	}
+
+	public void createNotificationAddResourceToActivity() {
+		NotificationDTO notificationDTO = new NotificationDTO();
+
+	}
+
+	public void createNotificationProjectState() {
+		NotificationDTO notificationDTO = new NotificationDTO();
+	}
+
+}

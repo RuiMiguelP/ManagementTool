@@ -1,0 +1,336 @@
+package pt.uc.dei.paj.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.inject.Inject;
+import javax.security.auth.login.CredentialException;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import pt.uc.dei.paj.dao.ActivityDAO;
+import pt.uc.dei.paj.dao.AllocationDAO;
+import pt.uc.dei.paj.dao.ProfileDAO;
+import pt.uc.dei.paj.dao.ProjectDAO;
+import pt.uc.dei.paj.dao.UserDAO;
+import pt.uc.dei.paj.dto.ActivityDTO;
+import pt.uc.dei.paj.dto.AllocationDTO;
+import pt.uc.dei.paj.dto.HttpMessageDTO;
+import pt.uc.dei.paj.dto.ProjectDTO;
+import pt.uc.dei.paj.entity.Activity;
+import pt.uc.dei.paj.entity.Allocation;
+import pt.uc.dei.paj.entity.Project;
+import pt.uc.dei.paj.entity.User;
+import pt.uc.dei.paj.enums.ProfileType;
+import pt.uc.dei.paj.util.Constants;
+
+import pt.uc.dei.paj.util.EntityMapper;
+import pt.uc.dei.paj.validator.ValidatorUtil;
+
+@Path("/projects")
+@Consumes({ MediaType.APPLICATION_JSON })
+@Produces({ MediaType.APPLICATION_JSON })
+public class ProjectService {
+
+	private static final Logger logger = Logger.getLogger("Project Service");
+
+	@Inject
+	Validator validator;
+
+	@Inject
+	ProjectDAO projectDAO;
+
+	@Inject
+	ProfileDAO profileDAO;
+
+	@Inject
+	AllocationDAO allocationDAO;
+	
+	@Inject
+	ActivityDAO activityDAO;
+
+	@Inject
+	UserDAO userDAO;
+
+	@POST
+	public Response createProject(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token, ProjectDTO projectDTO) {
+
+		try {
+			User user = userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling createProject ****");
+
+			if (userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.DIRECTOR))) {
+				Set<ConstraintViolation<ProjectDTO>> constraintViolations = validator.validate(projectDTO);
+
+				if (constraintViolations.isEmpty()) {
+
+					User manager = userDAO.findByEmail(projectDTO.getManagerEmail());
+					User technicalManager = userDAO.findByEmail(projectDTO.getTechnicalManagerEmail());
+
+					if (manager == null || technicalManager == null) {
+
+						return Response.status(Status.EXPECTATION_FAILED)
+								.entity(new HttpMessageDTO(Constants.MANAGER_NOT_FOUND)).build();
+
+					}
+
+					Project project = projectDAO.createProject(projectDTO, manager, technicalManager);
+
+					if (!projectDTO.getAllocations().isEmpty() || projectDTO.getAllocations() != null) {
+						for (AllocationDTO alloc : projectDTO.getAllocations()) {
+							alloc.setProjectId(project.getId());
+							allocationDAO.createAllocation(alloc);
+						}
+					}
+
+					return Response.status(Status.CREATED).entity(new HttpMessageDTO(Constants.PROJECT_CREATED))
+							.build();
+
+				} else {
+					for (ConstraintViolation<ProjectDTO> violation : constraintViolations) {
+						logger.log(Level.INFO, violation.getPropertyPath() + " Message: " + violation.getMessage());
+					}
+					return Response.status(Status.BAD_REQUEST).entity(new HttpMessageDTO(Constants.INVALID_FIELDS))
+							.build();
+				}
+			}
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO(Constants.UNAUTHORIZED_PERMISSION))
+					.build();
+		} catch (CredentialException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+	
+	@PUT
+	public Response createProject(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token, ProjectDTO projectDTO) {
+
+		try {
+			User user = userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling createProject ****");
+
+			if (userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.DIRECTOR))) {
+				Set<ConstraintViolation<ProjectDTO>> constraintViolations = validator.validate(projectDTO);
+
+				if (constraintViolations.isEmpty()) {
+
+					User manager = userDAO.findByEmail(projectDTO.getManagerEmail());
+					User technicalManager = userDAO.findByEmail(projectDTO.getTechnicalManagerEmail());
+
+					if (manager == null || technicalManager == null) {
+
+						return Response.status(Status.EXPECTATION_FAILED)
+								.entity(new HttpMessageDTO(Constants.MANAGER_NOT_FOUND)).build();
+
+					}
+
+					Project project = projectDAO.createProject(projectDTO, manager, technicalManager);
+
+					if (!projectDTO.getAllocations().isEmpty() || projectDTO.getAllocations() != null) {
+						for (AllocationDTO alloc : projectDTO.getAllocations()) {
+							alloc.setProjectId(project.getId());
+							allocationDAO.createAllocation(alloc);
+						}
+					}
+
+					return Response.status(Status.CREATED).entity(new HttpMessageDTO(Constants.PROJECT_CREATED))
+							.build();
+
+				} else {
+					for (ConstraintViolation<ProjectDTO> violation : constraintViolations) {
+						logger.log(Level.INFO, violation.getPropertyPath() + " Message: " + violation.getMessage());
+					}
+					return Response.status(Status.BAD_REQUEST).entity(new HttpMessageDTO(Constants.INVALID_FIELDS))
+							.build();
+				}
+			}
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO(Constants.UNAUTHORIZED_PERMISSION))
+					.build();
+		} catch (CredentialException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+
+	@GET
+	public Response findProject(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token) {
+
+		try {
+			User user = userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling findProject ****");
+
+			if (ValidatorUtil.verifyActiveStatus(user)) {
+				if (userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.DIRECTOR))) {
+
+					ArrayList<Project> result = (ArrayList<Project>) projectDAO.findAllProjects();
+
+					if (result.isEmpty()) {
+						return Response.status(Response.Status.NOT_FOUND).entity(Constants.RECORDS_NOT_EXISTS).build();
+					}
+
+					ArrayList<ProjectDTO> resultDto = EntityMapper.toProjectDTOList(result);
+					GenericEntity<List<ProjectDTO>> list = new GenericEntity<List<ProjectDTO>>(resultDto) {
+					};
+
+					return Response.status(Response.Status.OK).entity(list).build();
+				} else if (userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.USER))
+						|| userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.PROJECT_MANAGER))) {
+					ArrayList<ProjectDTO> resultDto = new ArrayList<>();
+					ArrayList<Project> result = (ArrayList<Project>) projectDAO.findAllProjectsByManager(user.getId());
+
+					if (!result.isEmpty()) {
+						resultDto = EntityMapper.toProjectDTOList(result);
+					}
+
+					ArrayList<Allocation> allocations = allocationDAO.findAllAllocationsByUser(user.getId());
+
+					if (!allocations.isEmpty()) {
+						resultDto = EntityMapper.mapProjectsByAllocations(allocations, resultDto);
+					}
+
+					if (result.isEmpty() && allocations.isEmpty()) {
+						return Response.status(Response.Status.NOT_FOUND).entity(Constants.RECORDS_NOT_EXISTS).build();
+					}
+
+					GenericEntity<List<ProjectDTO>> list = new GenericEntity<List<ProjectDTO>>(resultDto) {
+					};
+					return Response.status(Response.Status.OK).entity(list).build();
+				} else {
+					return Response.status(Status.UNAUTHORIZED)
+							.entity(new HttpMessageDTO(Constants.UNAUTHORIZED_PERMISSION)).build();
+				}
+			}
+			return Response.status(Status.FORBIDDEN).entity(new HttpMessageDTO(Constants.INACTIVE_ACCOUNT)).build();
+
+		} catch (CredentialException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+	
+	@POST
+	@Path("/{projectId}/activities")
+	public Response createActivity(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token, @NotNull @PathParam("projectId") long projectId, 
+			 ActivityDTO activityDTO) {
+
+		try {
+			User user = userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling createActivity ****");
+			
+			Project project = projectDAO.findById(projectId);
+			if (userDAO.findUserProfile(user, profileDAO.findByProfileType(ProfileType.DIRECTOR)) || project.getManager().getId() == user.getId()) {
+				Set<ConstraintViolation<ActivityDTO>> constraintViolations = validator.validate(activityDTO);
+
+				if (constraintViolations.isEmpty()) {
+					Allocation allocation = allocationDAO.findById(activityDTO.getAllocationId());
+					ArrayList<Activity> precedents = new ArrayList<>();
+					if (activityDTO.getPrecedentsId() != null || !activityDTO.getPrecedentsId().isEmpty()) {
+						precedents = EntityMapper.mapToPrecedents(activityDTO.getPrecedentsId());
+					}
+					
+					activityDAO.createActivity(activityDTO, project, allocation, precedents);
+					
+					return Response.status(Status.CREATED).entity(new HttpMessageDTO(Constants.ACTIVITY_CREATED))
+							.build();
+
+				} else {
+					for (ConstraintViolation<ActivityDTO> violation : constraintViolations) {
+						logger.log(Level.INFO, violation.getPropertyPath() + " Message: " + violation.getMessage());
+					}
+
+					return Response.status(Status.BAD_REQUEST).entity(new HttpMessageDTO(Constants.INVALID_FIELDS))
+							.build();
+				}
+			}
+
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO(Constants.UNAUTHORIZED_PERMISSION))
+					.build();
+
+		} catch (CredentialException e) {
+
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+	
+	@GET
+	@Path("/{projectId}/activities")
+	public Response findProjectActivities(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token, @NotNull @PathParam("projectId") long projectId) {
+
+		try {
+			userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling findProjectActivities ****");
+
+			
+			ArrayList<Activity> result = (ArrayList<Activity>) activityDAO.findProjectActivities(projectId);
+
+			if (result.isEmpty()) {
+				return Response.status(Response.Status.NOT_FOUND).entity(Constants.RECORDS_NOT_EXISTS).build();
+			}
+
+			ArrayList<ActivityDTO> resultDto = EntityMapper.toActivityDTOList(result);
+			GenericEntity<List<ActivityDTO>> list = new GenericEntity<List<ActivityDTO>>(resultDto) {
+			};
+
+			return Response.status(Response.Status.OK).entity(list).build();
+
+		} catch (CredentialException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+	
+	
+
+	@GET
+	@Path("/{projectId}/resources")
+	public Response findProjectResources(@Email @NotNull @HeaderParam("email") String email,
+			@NotNull @HeaderParam("token") String token, @NotNull @PathParam("projectId") long projectId) {
+
+		try {
+			userDAO.validateSession(email, token);
+
+			System.out.println("**** Project Service - Calling findProjectResources ****");
+
+			
+			ArrayList<Allocation> result = (ArrayList<Allocation>) allocationDAO.findProjectResources(projectId);
+
+			if (result.isEmpty()) {
+				return Response.status(Response.Status.NOT_FOUND).entity(Constants.RECORDS_NOT_EXISTS).build();
+			}
+
+			ArrayList<AllocationDTO> resultDto = EntityMapper.toAllocationDTOList(result);
+			GenericEntity<List<AllocationDTO>> list = new GenericEntity<List<AllocationDTO>>(resultDto) {
+			};
+
+			return Response.status(Response.Status.OK).entity(list).build();
+
+		} catch (CredentialException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(new HttpMessageDTO("Error: " + e.getMessage())).build();
+		}
+	}
+	
+	
+}

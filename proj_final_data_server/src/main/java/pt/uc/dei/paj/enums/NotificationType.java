@@ -1,0 +1,5 @@
+package pt.uc.dei.paj.enums;
+
+public enum NotificationType {
+	NEW_PROJECT, NEW_RESOURCE, ACTIVITY_CHANGED, USER_CHANGED, PROJECT_CHANGED, NEW_ACTIVITY, UPDATE_ACTIVITY, SESSION_OUT
+}

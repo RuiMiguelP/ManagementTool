@@ -1,0 +1,6 @@
+1593082693944	Delete element
+1593095891290	Move compilation unit
+1593370887728	Move compilation unit
+1593371030360	Rename type 'NotificationDto'
+1593382500394	Encapsulate field 'activityDTO'
+1593383413376	Encapsulate field 'activityId'
